@@ -1,0 +1,106 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GitHub User Profile and Repositories</title>
+    <style>
+        #repoList {
+            margin-top: 20px;
+        }
+        .repo {
+            border: 1px solid #333;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        .paginationBtn {
+            margin: 0 5px;
+        }
+    </style>
+</head>
+<body>
+<div id="profile">
+    <img id="avatar" src="" alt="Profile Image">
+    <h2 id="name"></h2>
+    <p id="bio"></p>
+    <p id="location"></p>
+    <a id="twitter" href=""></a>
+    <a id="github" href=""></a>
+</div>
+<h1>GitHub Repositories</h1>
+<input type="text" id="username" placeholder="Enter GitHub username">
+<button onclick="fetchRepos(1)">Fetch Repos</button>
+<div id="repoList"></div>
+<div id="pagination">
+    <button onclick="fetchRepos(currentPage - 1)" id="prevBtn" disabled>Previous</button>
+    <span id="currentPage">Page 1</span>
+    <div id="numberedPages"></div>
+    <button onclick="fetchRepos(currentPage + 1)" id="nextBtn" disabled>Next</button>
+</div>
+
+<script>
+    let currentPage = 1;
+
+    async function fetchRepos(page) {
+        const username = document.getElementById('username').value;
+        const response = await fetch(`http://localhost:5000/user/${username}?page=${page}`);
+        const repos = await response.json();
+        console.log(repos,"repos");
+        const repoList = document.getElementById('repoList');
+        repoList.innerHTML = ''; // Clear the list
+
+        for (const repo of repos) {
+            const repoDiv = document.createElement('div');
+            repoDiv.className = 'repo';
+            repoDiv.innerHTML = `
+                        <h2><a href="${repo.url}" target="_blank">${repo.name}</a></h2>
+                        <p>${repo.description}</p>
+                        <p>Language: ${repo.language}</p>
+                    `;
+            repoList.appendChild(repoDiv);
+        }
+
+        // Update pagination buttons and information
+        currentPage = page;
+        document.getElementById('currentPage').innerText = `Page ${currentPage}`;
+        document.getElementById('prevBtn').disabled = currentPage === 1;
+        document.getElementById('nextBtn').disabled = repos.length === 0;
+
+        await fetchUserProfile();
+        // Update numbered pagination
+        updateNumberedPages(currentPage);
+    }
+
+    async function fetchUserProfile() {
+        fetch('http://localhost:5000/user/suman2mandal/profile')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('avatar').src = data.avatar_url;
+                document.getElementById('name').textContent = data.name;
+                document.getElementById('bio').textContent = data.bio;
+                document.getElementById('location').textContent = data.location;
+                document.getElementById('twitter').href = `https://twitter.com/${data.twitter_username}`;
+                document.getElementById('github').href = data.html_url;
+            })
+            .catch(error => console.error('An error occurred:', error));
+    }
+
+    function updateNumberedPages(currentPage) {
+        const numberedPages = document.getElementById('numberedPages');
+        numberedPages.innerHTML = '';
+
+        for (let i = 1; i <= 8; i++) {
+            const pageBtn = document.createElement('button');
+            pageBtn.className = 'paginationBtn';
+            pageBtn.innerText = i;
+            pageBtn.onclick = () => fetchRepos(i);
+            numberedPages.appendChild(pageBtn);
+
+            if (i === currentPage) {
+                pageBtn.setAttribute('disabled', true);
+                pageBtn.classList.add('active');
+            }
+        }
+    }
+</script>
+</body>
+</html>
