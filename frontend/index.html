@@ -3,6 +3,9 @@
     <head>
         <title>GitHub User Profile and Repositories</title>
         <style>
+            *{
+                font-weight:bold;
+            }
             #repoList {
                 margin-top: 20px;
                 display: grid;
@@ -13,13 +16,10 @@
                 border: 3px solid #333;
                 padding: 10px;
             }
-            /*.repo {*/
-            /*    border: 1px solid #333;*/
-            /*    padding: 10px;*/
-            /*    margin-bottom: 10px;*/
-            /*}*/
             .paginationBtn {
-                margin: 0 5px;
+                padding: 10px 15px;
+                color: #428bca;
+                font-size: 20px;
             }
             #profile_image {
                 width: 150px;
@@ -47,6 +47,33 @@
                 align-items: center;
                 margin-top: 10px;
             }
+            #numberedPages{
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+            }
+            .pagination_number_wrapper{
+                display: flex;
+            }
+            .pagination_button{
+                border-radius: 50px;
+                padding: 10px 15px;
+                border-width: 1px;
+            }
+            .pagination{
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+            .tag_color{
+                padding: 6px;
+                margin-left:5px;
+                margin-right:5px;
+                border-radius: 4px;
+                color: white;
+                background-color: #428bca;
+                margin-bottom: 5px;
+            }
         </style>
     </head>
     <body>
@@ -71,16 +98,23 @@
                 <input type="text" id="username" placeholder="Enter GitHub username"/>
                 <button onclick="fetchRepos(1)">Fetch Repos</button>
                 <div id="repoList"></div>
-                <div id="pagination">
-                    <button onclick="fetchRepos(currentPage - 1)" id="prevBtn" disabled>Previous</button>
-                    <span id="currentPage">Page 1</span>
+                <div class="pagination" style="margin-top:50px;">
+                    <div class="pagination_number_wrapper">
+                    <button onclick="fetchRepos(currentPage - 1)" id="prevBtn2" style="color: #428bca;" disabled><<</button>
                     <div id="numberedPages"></div>
-                    <button onclick="fetchRepos(currentPage + 1)" id="nextBtn" disabled>Next</button>
+                    <button onclick="fetchRepos(currentPage + 1)" id="nextBtn2" style="color: #428bca;" disabled>>></button>
+                    </div>
+                </div>
+                <div class="pagination" style="margin-top:50px">
+                    <button onclick="fetchRepos(currentPage - 1)" id="prevBtn" class="pagination_button" style="margin-right: 240px" disabled><- Previous</button>
+                    <button onclick="fetchRepos(currentPage + 1)" id="nextBtn" class="pagination_button" disabled>Next -></button>
                 </div>
             </div>
         </div>
         <script>
             let currentPage = 1;
+            let totalPages = 1;
+
 
             async function fetchRepos(page) {
                 const username = document.getElementById('username').value;
@@ -95,22 +129,26 @@
                     const repoDiv = document.createElement('div');
                     repoDiv.className = 'repo';
                     repoDiv.innerHTML = `
-                                <h1><a href="${repo.url}" target="_blank" class="repo_name">${repo.name}</a></h1>
-                                <p>${repo.description}</p>
-                                <p>Language: <span style="padding:6px; border-radius: 4px; color:white; background-color:#428bca;">${repo.language}</span></p>
-                            `;
+                            <h1><a href="${repo.url}" target="_blank" class="repo_name">${repo.name}</a></h1>
+                            <p>${repo.description}</p>
+                            ${repo.topics.length > 0
+                                                ? repo.topics.map(topic => `<span class="tag_color">${topic}</span>`).join(' ')
+                                                : 'NULL'}
+                        `;
                     repoList.appendChild(repoDiv);
                 }
 
                 currentPage = page;
-                document.getElementById('currentPage').innerText = `Page ${currentPage}`;
+
                 document.getElementById('prevBtn').disabled = currentPage === 1;
+                document.getElementById('prevBtn2').disabled = currentPage === 1;
                 document.getElementById('nextBtn').disabled = repos.length === 0;
+                document.getElementById('nextBtn2').disabled = repos.length === 0;
 
                 await fetchUserProfile(username);
+                totalPages = calculateTotalPages(repos.length);
                 updateNumberedPages(currentPage);
             }
-
             async function fetchUserProfile(username) {
                 fetch(`http://localhost:5000/user/${username}/profile`)
                     .then(response => response.json())
@@ -123,6 +161,11 @@
                         document.getElementById('github').href = data.html_url;
                     })
                     .catch(error => console.error('An error occurred:', error));
+            }
+
+            function calculateTotalPages(totalRepos) {
+                const reposPerPage = 8; // Change this value based on your preference
+                return Math.ceil(totalRepos / reposPerPage);
             }
 
             function updateNumberedPages(currentPage) {
@@ -139,6 +182,8 @@
                     if (i === currentPage) {
                         pageBtn.setAttribute('disabled', true);
                         pageBtn.classList.add('active');
+                        pageBtn.style.backgroundColor = '#428bca';
+                        pageBtn.style.color = 'white';
                     }
                 }
             }

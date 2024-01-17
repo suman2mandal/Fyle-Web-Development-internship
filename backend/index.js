@@ -1,12 +1,15 @@
 import express from 'express';
 import cors from 'cors';
 import axios from 'axios';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const app = express();
 app.use(cors());
 const port = 5000;
 
-const token = "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";
+const token = process.env.key;
 const headers = new Headers();
 headers.append("Authorization", `Bearer ${token}`);
 const options = {
@@ -18,8 +21,7 @@ const axiosInstance = axios.create({
     baseURL: "https://api.github.com",
     headers: {
         Authorization: `Bearer ${token}`
-    },
-    timeout: 8000
+    }
 });
 
 app.get('/user/:username', async (req, res) => {
@@ -34,6 +36,7 @@ app.get('/user/:username', async (req, res) => {
             name: repo.name,
             description: repo.description,
             language: repo.language,
+            topics: repo.topics,
             url: repo.html_url
         }));
 
