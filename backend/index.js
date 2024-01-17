@@ -6,14 +6,30 @@ const app = express();
 app.use(cors());
 const port = 5000;
 
+const token = "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";
+const headers = new Headers();
+headers.append("Authorization", `Bearer ${token}`);
+const options = {
+    method: "GET",
+    headers: headers,
+};
+
+const axiosInstance = axios.create({
+    baseURL: "https://api.github.com",
+    headers: {
+        Authorization: `Bearer ${token}`
+    },
+    timeout: 8000
+});
+
 app.get('/user/:username', async (req, res) => {
     try {
         const username = req.params.username;
-        const itemsPerPage = 10; // Set the desired number of projects per page
+        const itemsPerPage = 10;
         const page = req.query.page || 1;
-        const url = `https://api.github.com/users/${username}/repos?page=${page}&per_page=${itemsPerPage}`;
+        const url = `/users/${username}/repos?page=${page}&per_page=${itemsPerPage}`;
 
-        const response = await axios.get(url);
+        const response = await axiosInstance.get(url);
         const repos = response.data.map(repo => ({
             name: repo.name,
             description: repo.description,
@@ -32,9 +48,9 @@ app.get('/user/:username', async (req, res) => {
 app.get('/user/:username/profile', async (req, res) => {
     try {
         const username = req.params.username;
-        const url = `https://api.github.com/users/${username}`;
+        const url = `/users/${username}`;
 
-        const response = await axios.get(url);
+        const response = await axiosInstance.get(url);
         const profile = {
             name: response.data.name,
             bio: response.data.bio,
@@ -50,6 +66,7 @@ app.get('/user/:username/profile', async (req, res) => {
         res.status(500).send('An error occurred while fetching data from GitHub.');
     }
 });
+
 
 app.listen(port, () => {
     console.log(`Server is running at http://localhost:${port}`);
