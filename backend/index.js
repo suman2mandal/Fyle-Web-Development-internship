@@ -9,7 +9,7 @@ const app = express();
 app.use(cors());
 const port = 5000;
 
-const token = process.env.key;
+const token = "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";
 const headers = new Headers();
 headers.append("Authorization", `Bearer ${token}`);
 const options = {
